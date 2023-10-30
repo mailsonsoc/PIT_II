@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -61,18 +62,30 @@ func main() {
 		}
 	}
 
-	tmpl := template.Must(template.ParseFiles("template/index.html"))
+	r := mux.NewRouter()
+	r.HandleFunc("/", ListProdutosHandler).Methods("GET")
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Não é mais uma solicitação POST, então removemos o código relacionado à adição de produtos aqui
-		var produtos []Produto
-		db.Find(&produtos)
-		data := ProdutoPageData{
-			PageTitle: "Coffee Shop - Manutenção de Estoque",
-			Produtos:  produtos,
-		}
-		tmpl.Execute(w, data)
-	})
-
+	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
+}
+
+func ListProdutosHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := gorm.Open(sqlite.Open("product.db"), &gorm.Config{})
+	if err != nil {
+		http.Error(w, "Failed to connect to the database", http.StatusInternalServerError)
+		return
+	}
+
+	var produtos []Produto
+	db.Find(&produtos)
+
+	tmpl := template.Must(template.ParseFiles("template/index.html"))
+	data := ProdutoPageData{
+		PageTitle: "Coffee Shop - Manutenção de Estoque",
+		Produtos:  produtos,
+	}
+
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, "Failed to execute template", http.StatusInternalServerError)
+	}
 }
