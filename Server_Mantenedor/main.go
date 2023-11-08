@@ -64,9 +64,21 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", ListProdutosHandler).Methods("GET")
-
+	r.HandleFunc("/produto/novo", CreateProdutoHandler).Methods("GET", "POST")
+	r.HandleFunc("/produto/editar/{id:[0-9]+}", EditProdutoHandler).Methods("GET", "POST")
+	r.HandleFunc("/produto/excluir/{id:[0-9]+}", DeleteProdutoHandler).Methods("POST")
+	
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
+}
+
+func CreateProdutoHandler(w http.ResponseWriter, r *http.Request) {
+}
+
+func EditProdutoHandler(w http.ResponseWriter, r *http.Request) {
+}
+
+func DeleteProdutoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListProdutosHandler(w http.ResponseWriter, r *http.Request) {
