@@ -7,11 +7,16 @@
     <title>Coffee Shop - Manutenção de Estoque</title>
 </head>
 <body>
+    <a href="/produto/novo">Novo Produto</a>
     <h1>{{.PageTitle}}</h1>
     <ul>
     {{range .Produtos}}
         <li>
             {{.NomeProduto}} (Compra: R${{.ValorCompra}}, Venda: R${{.ValorVenda}})
+            <a href="/produto/editar/{{.ID}}">Editar</a>
+            <form action="/produto/excluir/{{.ID}}" method="POST">
+                <input type="submit" value="Excluir">
+            </form>
         </li>
     {{end}}
     </ul>
