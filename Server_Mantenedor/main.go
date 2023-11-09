@@ -73,6 +73,48 @@ func main() {
 }
 
 func CreateProdutoHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := gorm.Open(sqlite.Open("product.db", &gorm.Config{})
+	if err != nil {
+		http.Error(w, "Failed to connect to the database", http.StatusInternalServerError)
+		return
+	}
+
+	if r.Method == "POST" {
+		nomeProduto := r.FormValue("nomeProduto")
+		valorCompra := r.FormValue("valorCompra")
+		valorVenda := r.FormValue("valorVenda")
+        valorCompraFloat, err := strconv.ParseFloat(valorCompra, 64)
+        if err != nil {
+            http.Error(w, "Invalid valorCompra", http.StatusBadRequest)
+            return
+        }
+
+        valorVendaFloat, err := strconv.ParseFloat(valorVenda, 64)
+        if err != nil {
+            http.Error(w, "Invalid valorVenda", http.StatusBadRequest)
+            return
+        }
+
+        produto := Produto{
+            NomeProduto: nomeProduto,
+            ValorCompra: valorCompraFloat,
+            ValorVenda:  valorVendaFloat,
+        }
+
+        db.Create(&produto)
+
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+		
+	}
+    	tmpl := template.Must(template.ParseFiles("template/create.html"))
+    	data := ProdutoPageData{
+        PageTitle: "Coffee Shop - Novo Produto",
+    	}
+
+   	 if err := tmpl.Execute(w, data); err != nil {
+   	     http.Error(w, "Failed to execute template", http.StatusInternalServerError)
+   	 }
+			     
 }
 
 func EditProdutoHandler(w http.ResponseWriter, r *http.Request) {
