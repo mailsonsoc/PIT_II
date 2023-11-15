@@ -1,10 +1,11 @@
+<!-- template/tickets.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coffee Shop - Controle de Estoque</title>
+    <title>{{.PageTitle}}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -30,30 +31,19 @@
             text-decoration: none;
             margin-left: 10px;
         }
-        form {
-            display: inline-block;
-        }
     </style>
 </head>
 <body>
-    <a href="/produto/novo">Novo Produto</a>
-    <a href="/abrir-ticket">Abrir Ticket</a>
-    <a href="/tickets">Tickets abertos</a>
-    <a href="/relatorio-fluxo">Relatório de fluxo de caixa</a>
-    <a href="/visualizar-transacoes">Visualizar transações</a>
     <h1>{{.PageTitle}}</h1>
     <ul>
-    {{range .Produtos}}
+        {{range .Tickets}}
         <li>
-            {{.NomeProduto}} (Compra: R${{.ValorCompra}}, Venda: R${{.ValorVenda}})
-            <form action="/produto/editar/{{.ID}}" method="GET" style="display: inline-block;">
-                <input type="submit" value="Editar">
-            </form>
-            <form action="/produto/excluir/{{.ID}}" method="POST" style="display: inline-block;">
-                <input type="submit" value="Excluir">
-            </form>
+            {{.Titulo}} (Aberto em: {{.DataAbertura.Format "02/01/2006 15:04:05"}})
+            <br>
+            {{.Descricao}}
         </li>
-    {{end}}
+        {{end}}
     </ul>
+    <a href="/index">Voltar para a lista de produtos</a>
 </body>
 </html>

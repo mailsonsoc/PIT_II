@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.PageTitle}}</title>
+    <title>Coffee Shop - Abertura de Ticket</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -45,13 +45,12 @@
     </style>
 </head>
 <body>
-    <h1>{{.PageTitle}}</h1>
-    <form action="/produto/novo" method="POST">
-        <input type="text" name="nomeProduto" placeholder="Nome do Produto"/>
-        <input type="text" name="valorCompra" placeholder="Valor de Compra"/>
-        <input type="text" name="valorVenda" placeholder="Valor de Venda"/>
-        <button type="submit">Adicionar Produto</button>
+    <h1>Abertura de Ticket</h1>
+    <form action="/abrir-ticket" method="POST">
+        <input type="text" name="titulo" placeholder="Título do Problema"/>
+        <textarea name="descricao" placeholder="Descrição do Problema"></textarea>
+        <button type="submit">Abrir Ticket</button>
     </form>
-    <a href="/">Voltar para a lista de produtos</a>
+    <a href="/index">Voltar para a lista de produtos</a>
 </body>
 </html>

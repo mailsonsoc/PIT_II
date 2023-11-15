@@ -46,12 +46,12 @@
 </head>
 <body>
     <h1>{{.PageTitle}}</h1>
-    <form action="/produto/novo" method="POST">
-        <input type="text" name="nomeProduto" placeholder="Nome do Produto"/>
-        <input type="text" name="valorCompra" placeholder="Valor de Compra"/>
-        <input type="text" name="valorVenda" placeholder="Valor de Venda"/>
-        <button type="submit">Adicionar Produto</button>
+    <form action="/produto/editar/{{.Produto.ID}}" method="POST">
+        <input type="text" name="nomeProduto" placeholder="Nome do Produto" value="{{.Produto.NomeProduto}}"/>
+        <input type="text" name="valorCompra" placeholder="Valor de Compra" value="{{.Produto.ValorCompra}}"/>
+        <input type="text" name="valorVenda" placeholder="Valor de Venda" value="{{.Produto.ValorVenda}}"/>
+        <button type="submit">Editar Produto</button>
     </form>
-    <a href="/">Voltar para a lista de produtos</a>
+    <a href="/index">Voltar para a lista de produtos</a>
 </body>
 </html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Fluxo de Caixa</title>
+    <style>
+        /* Estilos */
+    </style>
+</head>
+<body>
+    <h1>Relatório de Fluxo de Caixa</h1>
+    <form action="/gerar-relatorio" method="POST">
+        <label for="mes">Digite o número do mês (entre 1 e 12):</label>
+        <input type="number" name="mes" placeholder="Mês Desejado" min="1" max="12" required>
+    
+        <label for="ano">Digite o ano:</label>
+        <input type="number" name="ano" placeholder="Ano Desejado" min="1900" max="3000" required>
+    
+        <input type="submit" value="Gerar relatório">
+    </form>
+    <a href="/index">Voltar para a lista de produtos</a>
+</body>
+</html>

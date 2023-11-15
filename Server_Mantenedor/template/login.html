@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.PageTitle}}</title>
+    <title>Coffee Shop - Login</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
-            padding: 20px;
+            text-align: center;
+            padding: 50px;
         }
         h1 {
             color: #333;
@@ -36,22 +36,14 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        a {
-            display: block;
-            margin-top: 10px;
-            color: #4caf50;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
     <h1>{{.PageTitle}}</h1>
-    <form action="/produto/novo" method="POST">
-        <input type="text" name="nomeProduto" placeholder="Nome do Produto"/>
-        <input type="text" name="valorCompra" placeholder="Valor de Compra"/>
-        <input type="text" name="valorVenda" placeholder="Valor de Venda"/>
-        <button type="submit">Adicionar Produto</button>
+    <form action="/auth" method="post">
+        <input type="text" name="user" placeholder="Nome do usuário">
+        <input type="password" name="password" placeholder="Senha do usuário">
+        <button type="submit">Login</button>
     </form>
-    <a href="/">Voltar para a lista de produtos</a>
 </body>
 </html>
