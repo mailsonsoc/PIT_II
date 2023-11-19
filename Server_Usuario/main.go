@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
+	"os"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -24,7 +26,6 @@ type ProdutoPageData struct {
 }
 
 func main() {
-
 	// Configuração do servidor de arquivos estáticos
 	fs := http.FileServer(http.Dir("template"))
 	http.Handle("/", fs)
@@ -52,8 +53,36 @@ func paginaInicialHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func catalogoHandler(w http.ResponseWriter, r *http.Request) {
+	// Defina os caminhos para o arquivo de origem e de destino
+	origem := "C:/Users/albuq/go/src/PIT_II/Server_Mantenedor/product.db"
+	destino := "C:/Users/albuq/go/src/PIT_II/Server_Usuario/product.db"
+
+	// Abra o arquivo de origem para leitura
+	arquivoOrigem, err := os.Open(origem)
+	if err != nil {
+		fmt.Println("Erro ao abrir o arquivo de origem:", err)
+		return
+	}
+	defer arquivoOrigem.Close()
+
+	// Cria ou sobrescreve o arquivo de destino
+	arquivoDestino, err := os.Create(destino)
+	if err != nil {
+		fmt.Println("Erro ao criar o arquivo de destino:", err)
+		return
+	}
+	defer arquivoDestino.Close()
+
+	// Copia o conteúdo do arquivo de origem para o arquivo de destino
+	_, err = io.Copy(arquivoDestino, arquivoOrigem)
+	if err != nil {
+		fmt.Println("Erro ao copiar o conteúdo do arquivo:", err)
+		return
+	}
+
+	fmt.Println("Arquivo copiado com sucesso!")
 	// Abre o banco de dados no diretório atual
-	db, err := gorm.Open(sqlite.Open("C:/Users/albuq/go/src/PIT_II/Server_Usuario/product.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("product.db"), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect database")
 	}

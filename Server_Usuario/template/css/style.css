@@ -709,3 +709,22 @@ button {
     margin-top: 0px;
 }
 
+.lista-produtos {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.produto {
+    width: calc(33.33% - 20px);
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.produto:hover {
+    background-color: #e9e9e9;
+}

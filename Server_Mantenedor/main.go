@@ -498,45 +498,52 @@ func createAndPopulateTransacoesTable() {
 		panic("Failed to migrate Transacao table")
 	}
 
-	// Populate Transacao table with random data based on Produto
-	var produtos []Produto
-	dbProdutos, err := gorm.Open(sqlite.Open("product.db"), &gorm.Config{})
-	if err != nil {
-		panic("Failed to connect to the products database")
-	}
+	var count int64
+	db.Model(&Transacao{}).Count(&count)
 
-	dbProdutos.Find(&produtos)
-
-	// Create 20 random transactions for demonstration
-	rand.Seed(time.Now().UnixNano())
-	for i := 0; i < 20; i++ {
-		min := time.Date(2020, time.Month(1), 1, 0, 0, 0, 0, time.UTC)
-		max := time.Date(2023, time.Month(12)+1, 0, 0, 0, 0, 0, time.UTC)
-		delta := max.Sub(min)
-		randomTime := min.Add(time.Duration(rand.Int63n(int64(delta))))
-
-		produto := produtos[rand.Intn(len(produtos))]
-		quantidade := rand.Intn(3) + 1
-		valorTransacao := float64(quantidade) * produto.ValorVenda
-		valorTransacaoStr := fmt.Sprintf("%.2f", valorTransacao)
-		valorTransacaoFloat, _ := strconv.ParseFloat(valorTransacaoStr, 64)
-		dataTransacao := randomTime.Format(layout)
-		dataTransacaoTime, err := time.Parse(layout, dataTransacao)
+	// Adiciona dados de exemplo apenas se a tabela estiver vazia
+	if count == 0 {
+		// Populate Transacao table with random data based on Produto
+		var produtos []Produto
+		dbProdutos, err := gorm.Open(sqlite.Open("product.db"), &gorm.Config{})
 		if err != nil {
-			fmt.Println("Erro ao converter string para time.Time:", err)
-			return
+			panic("Failed to connect to the products database")
 		}
 
-		transacao := Transacao{
-			CodigoTransacao: uint(i + 1),
-			CodigoProd:      produto.ID,
-			NomeProd:        produto.NomeProduto,
-			QuantidadeProd:  quantidade,
-			ValorTransacao:  valorTransacaoFloat,
-			DataTransacao:   dataTransacaoTime,
-			DataFormatted:   dataTransacao,
-		}
+		dbProdutos.Find(&produtos)
 
-		db.Create(&transacao)
+		// Create 20 random transactions for demonstration
+		rand.Seed(time.Now().UnixNano())
+		for i := 0; i < 20; i++ {
+			min := time.Date(2020, time.Month(1), 1, 0, 0, 0, 0, time.UTC)
+			max := time.Date(2023, time.Month(12)+1, 0, 0, 0, 0, 0, time.UTC)
+			delta := max.Sub(min)
+			randomTime := min.Add(time.Duration(rand.Int63n(int64(delta))))
+
+			// Produto aleatório
+			produto := produtos[rand.Intn(len(produtos))]
+			quantidade := rand.Intn(3) + 1
+			valorTransacao := float64(quantidade) * produto.ValorVenda
+			valorTransacaoStr := fmt.Sprintf("%.2f", valorTransacao)
+			valorTransacaoFloat, _ := strconv.ParseFloat(valorTransacaoStr, 64)
+			dataTransacao := randomTime.Format(layout)
+			dataTransacaoTime, err := time.Parse(layout, dataTransacao)
+			if err != nil {
+				fmt.Println("Erro ao converter string para time.Time:", err)
+				return
+			}
+
+			transacao := Transacao{
+				CodigoTransacao: uint(i + 1),
+				CodigoProd:      produto.ID,
+				NomeProd:        produto.NomeProduto,
+				QuantidadeProd:  quantidade,
+				ValorTransacao:  valorTransacaoFloat,
+				DataTransacao:   dataTransacaoTime,
+				DataFormatted:   dataTransacao,
+			}
+
+			db.Create(&transacao)
+		}
 	}
 }

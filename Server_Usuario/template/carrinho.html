@@ -37,7 +37,7 @@
     <div class="header_section">
         <div class="container-fluid">
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <div class="logo"><a href="index.html"><img src="img/logo.png"></a></div>
+                <div class="logo"><a href="index.html"><img src="img/logo.png" width="60%" height="60%"></a></div>
                 <button class="navbar-toggler" type="button" data-toggle="collapse"
                     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                     aria-label="Toggle navigation">
@@ -65,30 +65,99 @@
             </nav>
         </div>
     </div>
+    <div>
+        <h1 class="about_taital">Carrinho</h1>
+        <ul style="list-style: none;
+        padding: 0;">
+            {{range .Carrinho}}
+            <li style="margin-bottom: 10px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f9f9f9;">
+                <strong>{{.NomeProdutoCarrinho}}</strong>
+                {{.ValorVendaCarrinho}}
+                {{.ValorTotalProduto}}
+            </li>
+            {{.ValorTotalCarrinho}}
+            <div class="payment-options">
+                <label>Escolha o método de pagamento:</label>
+                <ul>
+                    <li>
+                        <input type="radio" id="card" name="payment" class="payment-option" value="card">
+                        <label for="card" class="payment-label"></label>
+                        <span>Cartão</span>
+                    </li>
+                    <li>
+                        <input type="radio" id="cash" name="payment" class="payment-option" value="cash">
+                        <label for="cash" class="payment-label"></label>
+                        <span>Dinheiro</span>
+                    </li>
+                    <li>
+                        <input type="radio" id="pix" name="payment" class="payment-option" value="pix">
+                        <label for="pix" class="payment-label"></label>
+                        <span>PIX</span>
+                    </li>
+                </ul>
+
+                <div class="method-details" id="card-details" style="display: none;">
+                    Detalhes de pagamento com cartão.
+                </div>
+                <div class="method-details" id="cash-details" style="display: none;">
+                    Detalhes de pagamento em dinheiro.
+                </div>
+                <div class="method-details" id="pix-details" style="display: none;">
+                    Detalhes de pagamento com PIX.
+                </div>
+            </div>
+            <button onclick="confirmClearCart()" style="
+        padding: 5px 10px;
+        background-color: red;
+        color: whitesmoke;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;" class="buy-button">Zerar carrinho</button>
+            <button onclick="confirmFinishPurchase()" style="
+                        padding: 5px 10px;
+                        background-color: green;
+                        color: whitesmoke;
+                        border: none;
+                        border-radius: 3px;
+                        cursor: pointer;" class="buy-button">Finalizar compra</button>
+            {{end}}
+        </ul>
+    </div>
     <div class="footer_section layout_padding margin_top_0">
         <div class="container">
-          <div class="row">
-            <div class="col-md-4">
-              <h1 class="address_text">Address</h1>
-              <div class="location_text"><a href="#"><img src="img/map-icon.png"><span class="padding_left_15">No.123 Chalingt Gates,</span></a></div>
-              <div class="location_text"><a href="#"><img src="img/call-icon.png"><span class="padding_left_15">( +01 9876543210 )</span></a></div>
-              <div class="location_text"><a href="#"><img src="img/mail-icon.png"><span class="padding_left_15">Locations</span></a></div>
+            <div class="row">
+                <div class="col-md-4">
+                    <h1 class="address_text">Address</h1>
+                    <div class="location_text"><a href="#"><img src="img/map-icon.png"><span
+                                class="padding_left_15">No.123 Chalingt Gates,</span></a></div>
+                    <div class="location_text"><a href="#"><img src="img/call-icon.png"><span class="padding_left_15">(
+                                +01 9876543210 )</span></a></div>
+                    <div class="location_text"><a href="#"><img src="img/mail-icon.png"><span
+                                class="padding_left_15">Locations</span></a></div>
+                </div>
+                <div class="col-md-4">
+                    <h1 class="address_text">Social link</h1>
+                    <div class="location_text"><a href="#"><img src="img/fb-icon.png"><span
+                                class="padding_left_15">Facebook</span></a></div>
+                    <div class="location_text"><a href="#"><img src="img/twitter-icon.png"><span
+                                class="padding_left_15">Twitter</span></a></div>
+                    <div class="location_text"><a href="#"><img src="img/instagram-icon.png"><span
+                                class="padding_left_15">Instagram</span></a></div>
+                    <div class="location_text"><a href="#"><img src="img/Linkedin-icon.png"><span
+                                class="padding_left_15">Linkedin</span></a></div>
+                </div>
+                <div class="col-md-4">
+                    <h1 class="address_text">Newsletter</h1>
+                    <input type="text" class="enter_text" placeholder="Enter Your Email">
+                    <div class="subscribe_bt"><a href="#">subscribe</a></div>
+                </div>
             </div>
-            <div class="col-md-4">
-              <h1 class="address_text">Social link</h1>
-              <div class="location_text"><a href="#"><img src="img/fb-icon.png"><span class="padding_left_15">Facebook</span></a></div>
-              <div class="location_text"><a href="#"><img src="img/twitter-icon.png"><span class="padding_left_15">Twitter</span></a></div>
-              <div class="location_text"><a href="#"><img src="img/instagram-icon.png"><span class="padding_left_15">Instagram</span></a></div>
-              <div class="location_text"><a href="#"><img src="img/Linkedin-icon.png"><span class="padding_left_15">Linkedin</span></a></div>
-            </div>
-            <div class="col-md-4">
-              <h1 class="address_text">Newsletter</h1>
-              <input type="text" class="enter_text" placeholder="Enter Your Email">
-              <div class="subscribe_bt"><a href="#">subscribe</a></div>
-            </div>
-          </div>
         </div>
-      </div>
+    </div>
     <!-- Javascript files-->
     <script src="js/jquery.min.js"></script>
     <script src="js/popper.min.js"></script>
@@ -101,6 +170,32 @@
     <!-- javascript -->
     <script src="js/owl.carousel.js"></script>
     <script src="https:cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.js"></script>
+    <script>
+        function confirmClearCart() {
+            var confirmation = confirm("Você deseja zerar o carrinho?");
+            if (confirmation) {
+                // Ação quando o usuário clica em "Sim"
+                alert("Carrinho zerado!");
+                // Aqui você pode adicionar a lógica para limpar o carrinho
+            } else {
+                // Ação quando o usuário clica em "Não"
+                // Nenhuma ação necessária, apenas fechar o pop-up
+            }
+        }
+
+        function confirmFinishPurchase() {
+            var confirmation = confirm("Você deseja finalizar a compra?");
+            if (confirmation) {
+                // Ação quando o usuário clica em "Sim"
+                alert("Obrigado pela preferência!");
+                // Aqui você pode adicionar a lógica para finalizar a compra
+                // e redirecionar o usuário para a página desejada
+            } else {
+                // Ação quando o usuário clica em "Não"
+                // Nenhuma ação necessária, apenas fechar o pop-up
+            }
+        }
+    </script>
 </body>
 
 </html>
