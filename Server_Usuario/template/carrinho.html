@@ -70,16 +70,16 @@
         <ul style="list-style: none;
         padding: 0;">
             {{range .Carrinho}}
-            <li style="margin-bottom: 10px;
-        border: 1px solid #ccc;
-        padding: 10px;
-        border-radius: 5px;
-        background-color: #f9f9f9;">
-                <strong>{{.NomeProdutoCarrinho}}</strong>
-                {{.ValorVendaCarrinho}}
-                {{.ValorTotalProduto}}
+            <li
+                style="margin-bottom: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 5px; background-color: #f9f9f9;">
+                <strong>{{.NomeProduto}}</strong>
+                Quantidade:{{.QuantidadeProd}}
+                ValorUnitário: R${{.ValorVenda}}
             </li>
-            {{.ValorTotalCarrinho}}
+            {{end}}
+            <li>
+                <strong>Valor Total do Carrinho: R$</strong><span>{{.ValorTotalCarrinho}}</span>
+            </li>
             <div class="payment-options">
                 <label>Escolha o método de pagamento:</label>
                 <ul>
@@ -110,21 +110,12 @@
                     Detalhes de pagamento com PIX.
                 </div>
             </div>
-            <button onclick="confirmClearCart()" style="
-        padding: 5px 10px;
-        background-color: red;
-        color: whitesmoke;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;" class="buy-button">Zerar carrinho</button>
-            <button onclick="confirmFinishPurchase()" style="
-                        padding: 5px 10px;
-                        background-color: green;
-                        color: whitesmoke;
-                        border: none;
-                        border-radius: 3px;
-                        cursor: pointer;" class="buy-button">Finalizar compra</button>
-            {{end}}
+            <button onclick="confirmClearCart()"
+                style="padding: 5px 10px; background-color: red; color: whitesmoke; border: none; border-radius: 3px; cursor: pointer;"
+                class="buy-button">Zerar carrinho</button>
+            <button onclick="confirmFinishPurchase()"
+                style="padding: 5px 10px; background-color: green; color: whitesmoke; border: none; border-radius: 3px; cursor: pointer;"
+                class="buy-button">Finalizar compra</button>
         </ul>
     </div>
     <div class="footer_section layout_padding margin_top_0">
@@ -176,7 +167,22 @@
             if (confirmation) {
                 // Ação quando o usuário clica em "Sim"
                 alert("Carrinho zerado!");
-                // Aqui você pode adicionar a lógica para limpar o carrinho
+
+                // Requisição para o servidor para zerar o carrinho
+                fetch('/zerar_carrinho', {
+                    method: 'POST'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            // Ação após a operação ser bem-sucedida
+                            console.log('Carrinho zerado com sucesso!');
+                        } else {
+                            throw new Error('Falha ao zerar carrinho');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                    });
             } else {
                 // Ação quando o usuário clica em "Não"
                 // Nenhuma ação necessária, apenas fechar o pop-up
@@ -188,13 +194,30 @@
             if (confirmation) {
                 // Ação quando o usuário clica em "Sim"
                 alert("Obrigado pela preferência!");
-                // Aqui você pode adicionar a lógica para finalizar a compra
-                // e redirecionar o usuário para a página desejada
+
+                // Requisição para o servidor para adicionar transações e zerar o carrinho
+                fetch('/finalizar_compra', {
+                    method: 'POST'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            // Ação após a operação ser bem-sucedida
+                            console.log('Compra finalizada com sucesso!');
+                            // Redirecionar o usuário para a página desejada
+                            window.location.href = '/';
+                        } else {
+                            throw new Error('Falha ao finalizar compra');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                    });
             } else {
                 // Ação quando o usuário clica em "Não"
                 // Nenhuma ação necessária, apenas fechar o pop-up
             }
         }
+
     </script>
 </body>
 
