@@ -82,13 +82,6 @@ func main() {
 
 	createAndPopulateTransacoesTable()
 
-	// AutoMigrate para criar as tabelas no PostgreSQL
-	db.AutoMigrate(&Produto{})
-	db.AutoMigrate(&Ticket{})
-	db.AutoMigrate(&Transacao{})
-
-	createAndPopulateTransacoesTable()
-
 	r := mux.NewRouter()
 	r.HandleFunc("/", LoginHandler).Methods("GET")
 	r.HandleFunc("/index", ListProdutosHandler).Methods("GET")
