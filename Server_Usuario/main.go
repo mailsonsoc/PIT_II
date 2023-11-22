@@ -1,21 +1,26 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
-	"io"
+	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"cloud.google.com/go/firestore"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 )
 
+type FirestoreClient struct {
+	Client *firestore.Client
+	Ctx    context.Context
+}
+
 type Produto struct {
-	gorm.Model
-	ID          uint
+	ID          int
 	NomeProduto string
 	ValorCompra float64
 	ValorVenda  float64
@@ -31,13 +36,12 @@ type ProdutoPageData struct {
 
 // Estrutura para os itens do carrinho
 type CarrinhoItem struct {
-	CodigoTransacao uint
-	CodigoProduto   uint
+	CodigoTransacao int
+	CodigoProduto   int
 	NomeProduto     string
-	QuantidadeProd  uint
+	QuantidadeProd  int
 	ValorVenda      float64
 	ValorTransacao  float64
-	DataTransacao   string
 }
 
 var carrinho []CarrinhoItem // Estrutura de dados para o carrinho
@@ -72,57 +76,56 @@ func main() {
 	}
 }
 
+func InitializeFirestore() (*FirestoreClient, error) {
+	ctx := context.Background()
+
+	// Substitua o caminho do seu arquivo de credenciais JSON do Firebase
+	opt := option.WithCredentialsFile("C:/Users/albuq/go/fir-db-pitii-firebase-adminsdk-sok9l-acdd50458a.json")
+
+	// Inicialize o cliente Firestore
+	client, err := firestore.NewClient(ctx, "fir-db-pitii", opt)
+	if err != nil {
+		log.Fatalf("Erro ao inicializar o cliente Firestore: %v", err)
+		return nil, err
+	}
+
+	return &FirestoreClient{
+		Client: client,
+		Ctx:    ctx,
+	}, nil
+}
+
 // Handlers para cada endpoint
 func paginaInicialHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "template/index.html")
 }
 
 func catalogoHandler(w http.ResponseWriter, r *http.Request) {
-	// Defina os caminhos para o arquivo de origem e de destino
-	origem := "C:/Users/albuq/go/src/PIT_II/Server_Mantenedor/product.db"
-	destino := "C:/Users/albuq/go/src/PIT_II/Server_Usuario/product.db"
-
-	// Abra o arquivo de origem para leitura
-	arquivoOrigem, err := os.Open(origem)
+	firestoreClient, err := InitializeFirestore()
 	if err != nil {
-		fmt.Println("Erro ao abrir o arquivo de origem:", err)
-		return
-	}
-	defer arquivoOrigem.Close()
-
-	// Cria ou sobrescreve o arquivo de destino
-	arquivoDestino, err := os.Create(destino)
-	if err != nil {
-		fmt.Println("Erro ao criar o arquivo de destino:", err)
-		return
-	}
-	defer arquivoDestino.Close()
-
-	// Copia o conteúdo do arquivo de origem para o arquivo de destino
-	_, err = io.Copy(arquivoDestino, arquivoOrigem)
-	if err != nil {
-		fmt.Println("Erro ao copiar o conteúdo do arquivo:", err)
-		return
-	}
-
-	fmt.Println("Arquivo copiado com sucesso!")
-	// Abre o banco de dados no diretório atual
-	db, err := gorm.Open(sqlite.Open("product.db"), &gorm.Config{})
-	if err != nil {
-		panic("Failed to connect database")
-	}
-
-	// Migrate (cria) a tabela Produto se ela ainda não existir
-	if err := db.AutoMigrate(&Produto{}); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to migrate database: %s", err.Error()), http.StatusInternalServerError)
+		http.Error(w, "Failed to connect to Firestore", http.StatusInternalServerError)
 		return
 	}
 
 	// Realiza uma busca por todos os produtos na tabela
 	var produtos []Produto
-	if err := db.Find(&produtos).Error; err != nil {
-		http.Error(w, fmt.Sprintf("Failed to retrieve data from database: %s", err.Error()), http.StatusInternalServerError)
-		return
+
+	iter := firestoreClient.Client.Collection("produtos").Documents(firestoreClient.Ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			http.Error(w, "Failed to fetch products from Firestore", http.StatusInternalServerError)
+			return
+		}
+		var produto Produto
+		if err := doc.DataTo(&produto); err != nil {
+			http.Error(w, "Failed to parse product data", http.StatusInternalServerError)
+			return
+		}
+		produtos = append(produtos, produto)
 	}
 
 	// Carrega os dados na página HTML
@@ -171,6 +174,13 @@ func adicionarAoCarrinhoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Inicializa o cliente Firestore
+	firestoreClient, err := InitializeFirestore()
+	if err != nil {
+		http.Error(w, "Failed to connect to Firestore", http.StatusInternalServerError)
+		return
+	}
+
 	// Obtenção dos dados do produto e quantidade do formulário enviado pelo front-end
 	codigoProdutoStr := r.FormValue("codigoProduto")
 	codigoProduto, err := strconv.ParseUint(codigoProdutoStr, 10, 64)
@@ -182,21 +192,31 @@ func adicionarAoCarrinhoHandler(w http.ResponseWriter, r *http.Request) {
 	valorVenda, _ := strconv.ParseFloat(r.FormValue("valorVenda"), 64)
 	quantidadeProd, _ := strconv.Atoi(r.FormValue("quantidadeProd"))
 
-	// Obtenção do próximo código de transação
-	proximoCodigoTransacao := proximoCodigoTransacao()
+	// Obtém o próximo código de transação baseado no próximo ID do documento na coleção "transacoes"
+	proxCodigoTransacao, err := proximoCodigoTransacao(firestoreClient)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get next transaction ID: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
 
 	// Criando um novo item do carrinho
 	itemCarrinho := CarrinhoItem{
-		CodigoTransacao: proximoCodigoTransacao,
-		CodigoProduto:   uint(codigoProduto),
+		CodigoTransacao: proxCodigoTransacao,
+		CodigoProduto:   int(codigoProduto),
 		NomeProduto:     nomeProduto,
-		QuantidadeProd:  uint(quantidadeProd),
+		QuantidadeProd:  int(quantidadeProd),
 		ValorVenda:      valorVenda,
 		ValorTransacao:  valorVenda * float64(quantidadeProd),
-		DataTransacao:   time.Now().Format("2006-01-02"), // Formato da data: YYYY-MM-DD
 	}
 
-	// Adicionando o item ao carrinho
+	// Salva o item do carrinho na coleção "carrinho" no Firestore
+	_, _, err = firestoreClient.Client.Collection("carrinho").Add(firestoreClient.Ctx, itemCarrinho)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to save item in Firestore: %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	// Adiciona o item ao slice carrinho local
 	carrinho = append(carrinho, itemCarrinho)
 
 	// Responde ao front-end indicando sucesso
@@ -204,13 +224,21 @@ func adicionarAoCarrinhoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Produto adicionado ao carrinho com sucesso!"))
 }
 
-// Função para calcular o próximo código de transação
-func proximoCodigoTransacao() uint {
-	if len(carrinho) == 0 {
-		return 1
+func proximoCodigoTransacao(firestoreClient *FirestoreClient) (int, error) {
+	// Obtém o próximo código de transação baseado no próximo ID do documento na coleção "transacoes"
+	iter := firestoreClient.Client.Collection("transacoes").Documents(firestoreClient.Ctx)
+	numDocs := int(0)
+	for {
+		_, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return 0, err
+		}
+		numDocs++
 	}
-	ultimoCodigo := carrinho[len(carrinho)-1].CodigoTransacao
-	return ultimoCodigo + 1
+	return numDocs + 1, nil
 }
 
 func zerarCarrinhoHandler(w http.ResponseWriter, r *http.Request) {
@@ -219,35 +247,77 @@ func zerarCarrinhoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func finalizarCompraHandler(w http.ResponseWriter, r *http.Request) {
-	// Aqui você pode incluir a lógica para adicionar as transações no banco de dados
-	// e redirecionar o usuário para a página desejada após a compra
-	// ...
-
-	// Adicionar os itens do carrinho ao banco de dados (SQLite)
-	db, err := gorm.Open(sqlite.Open("carrinho.db"), &gorm.Config{})
+	// Inicializa o cliente Firestore
+	firestoreClient, err := InitializeFirestore()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to connect to database: %s", err.Error()), http.StatusInternalServerError)
+		http.Error(w, "Failed to connect to Firestore", http.StatusInternalServerError)
 		return
 	}
 
-	// Migrate (cria) a tabela CarrinhoItem se ela ainda não existir
-	if err := db.AutoMigrate(&CarrinhoItem{}); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to migrate database: %s", err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	// Salvar os itens do carrinho no banco de dados
+	// Salva os itens do carrinho na coleção "carrinho" no Firestore
 	for _, item := range carrinho {
-		if err := db.Create(&item).Error; err != nil {
-			http.Error(w, fmt.Sprintf("Failed to save item in database: %s", err.Error()), http.StatusInternalServerError)
+		itemData := map[string]interface{}{
+			"codigo_transacao": item.CodigoTransacao,
+			"codigo_produto":   item.CodigoProduto,
+			"nome_produto":     item.NomeProduto,
+			"quantidade_prod":  item.QuantidadeProd,
+			"valor_venda":      item.ValorVenda,
+			"valor_transacao":  item.ValorTransacao,
+			"data_transacao":   time.Now(),
+		}
+
+		_, _, err := firestoreClient.Client.Collection("carrinho").Add(context.Background(), itemData)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to save item in Firestore: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
 	}
 
-	// Limpar o carrinho após salvar os itens no banco de dados
+	// Salva os itens do carrinho na coleção "transacoes" no Firestore
+	for _, item := range carrinho {
+		itemData := map[string]interface{}{
+			"codigo_transacao": item.CodigoTransacao,
+			"codigo_produto":   item.CodigoProduto,
+			"nome_produto":     item.NomeProduto,
+			"quantidade_prod":  item.QuantidadeProd,
+			"valor_venda":      item.ValorVenda,
+			"valor_transacao":  item.ValorTransacao,
+			"data_transacao":   time.Now(),
+		}
+
+		_, _, err := firestoreClient.Client.Collection("transacoes").Add(context.Background(), itemData)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to save transaction in Firestore: %s", err.Error()), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Exclui todos os documentos da coleção "carrinho" no Firestore, exceto o documento com ID "1"
+	iter := firestoreClient.Client.Collection("carrinho").Documents(firestoreClient.Ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			http.Error(w, "Failed to fetch documents from Firestore", http.StatusInternalServerError)
+			return
+		}
+
+		docID := doc.Ref.ID
+		if docID != "1" {
+			_, err := firestoreClient.Client.Collection("carrinho").Doc(docID).Delete(firestoreClient.Ctx)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to delete document in Firestore: %s", err.Error()), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+
+	// Limpa o carrinho após salvar os itens no Firestore e excluir os itens do carrinho
 	carrinho = make([]CarrinhoItem, 0)
 
-	// Redirecionar o usuário para a página desejada após a compra
+	// Redireciona o usuário para a página desejada após a compra
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
